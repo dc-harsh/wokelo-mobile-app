@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
@@ -7,10 +7,31 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { API_BASE_URL } from '@/services/auth';
+import { DataManager, StorageService } from '@/services/storage';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-
+  const handleReports = async()=>{
+      const accessToken = await StorageService.getAccessToken()
+      const profile_data = await fetch(
+          `${API_BASE_URL}/api/accounts/user_detail/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        )
+      return profile_data.json()
+    }
+    useEffect(()=>{
+      handleReports().then(profileData=>{
+      DataManager.storeData('user-data',JSON.stringify(profileData))
+      })
+    },[])
+   
   return (
     <Tabs
       screenOptions={{

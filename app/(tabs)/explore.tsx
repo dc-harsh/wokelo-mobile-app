@@ -1,8 +1,9 @@
-import { StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { useState } from 'react';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function CreateWorkflowScreen() {
   const [workflowName, setWorkflowName] = useState('');
@@ -28,49 +29,64 @@ export default function CreateWorkflowScreen() {
       ]
     );
   };
-
+  const router = useRouter();
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title">Create Workflow</ThemedText>
+        <ThemedText type="title">Wokelo Workflows</ThemedText>
       </ThemedView>
-      
+
       <ThemedView style={styles.content}>
         <ThemedView style={styles.iconContainer}>
           <IconSymbol size={80} name="plus.circle.fill" color="#0a7ea4" />
         </ThemedView>
-        
+
         <ThemedView style={styles.formContainer}>
-          <ThemedView style={styles.inputContainer}>
-            <ThemedText type="defaultSemiBold" style={styles.label}>
-              Workflow Name
-            </ThemedText>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter workflow name"
-              placeholderTextColor="#999"
-              value={workflowName}
-              onChangeText={setWorkflowName}
+          {/* IP */}
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              // justifyContent:'space-between',
+              flexDirection: "row",
+              alignItems: "center",
+              padding: 12,
+              backgroundColor: "#0a7ea4",
+              borderRadius: 12,
+            }}
+            onPress={()=>{
+              router.replace('/list?mode=ip')
+            }}
+          >
+            <Image
+              style={{ height: 50, width: 50 }}
+              source={{
+                uri: "https://wkemails.blob.core.windows.net/fe-application/industry primer.svg",
+              }}
             />
-          </ThemedView>
-          
-          <ThemedView style={styles.inputContainer}>
-            <ThemedText type="defaultSemiBold" style={styles.label}>
-              Description (Optional)
-            </ThemedText>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Enter workflow description"
-              placeholderTextColor="#999"
-              value={workflowDescription}
-              onChangeText={setWorkflowDescription}
-              multiline
-              numberOfLines={4}
+            <ThemedText style={{marginLeft:12, fontWeight:'500'}}>Industry Primer</ThemedText>
+          </TouchableOpacity>
+
+          {/* CP */}
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              alignItems: "center",
+              padding: 12,
+              backgroundColor: "#0a7ea4",
+              borderRadius: 12,
+            }}
+            onPress={()=>{
+              router.replace('/list?mode=cp')
+            }}
+          >
+            <Image
+              style={{ height: 50, width: 50 }}
+              source={{
+                uri: "https://wkemails.blob.core.windows.net/fe-application/Company primer.svg",
+              }}
             />
-          </ThemedView>
-          
-          <TouchableOpacity style={styles.createButton} onPress={handleCreateWorkflow}>
-            <ThemedText style={styles.buttonText}>Create Workflow</ThemedText>
+            <ThemedText style={{marginLeft:12, fontWeight:'500'}}>Company Primer</ThemedText>
           </TouchableOpacity>
         </ThemedView>
       </ThemedView>

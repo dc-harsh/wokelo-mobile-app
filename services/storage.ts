@@ -60,3 +60,20 @@ export class StorageService {
     }
   }
 }
+
+export class DataManager {
+  static async storeData(key:string,value:string): Promise<void> {
+    if (Platform.OS === 'web') {
+      await AsyncStorage.setItem(key, value);
+    } else { // mobile
+      await SecureStore.setItemAsync(key, value);
+    }
+  }
+  static async getData(key:string): Promise<string|null> {
+    if (Platform.OS === 'web') {
+      return await AsyncStorage.getItem(key);
+    } else { // mobile
+      return await SecureStore.getItemAsync(key);
+    }
+  }
+}

@@ -1,14 +1,16 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { API_BASE_URL } from '@/services/auth';
+import { DataManager, StorageService } from '@/services/storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Notebook {
   id: string;
   title: string;
-  createdDate: string;
+  created_on: string;
   type: string;
   status: 'Viewed' | 'Unread';
 }
@@ -17,28 +19,28 @@ const mockNotebooks: Notebook[] = [
   {
     id: '1',
     title: 'Oracle',
-    createdDate: '2024-01-15',
+    created_on: '2024-01-15',
     type: 'Company Research',
     status: 'Viewed',
   },
   {
     id: '2',
     title: 'Healthcare',
-    createdDate: '2024-01-12',
+    created_on: '2024-01-12',
     type: 'Industry Research',
     status: 'Unread',
   },
   {
     id: '3',
     title: 'Microsoft',
-    createdDate: '2024-01-10',
+    created_on: '2024-01-10',
     type: 'Company Research',
     status: 'Viewed',
   },
   {
     id: '4',
     title: 'Technology Trends',
-    createdDate: '2024-01-08',
+    created_on: '2024-01-08',
     type: 'Industry Research',
     status: 'Unread',
   },
@@ -50,11 +52,38 @@ export default function NotebooksScreen() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
   const searchAnimation = useRef(new Animated.Value(0)).current;
+  const [reports,setReports] = useState<Notebook[]>([]);
+  const [userData,setUserData] = useState({first_name:'User'});
 
   const filteredNotebooks = notebooks.filter(notebook =>
     notebook.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+ 
+  const handleReports = async()=>{
+    const accessToken = await StorageService.getAccessToken()
+    const reports = await fetch(
+        `${API_BASE_URL}/api/accounts/reports/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      )
+    return reports.json()
+  }
+  useEffect(()=>{
+    DataManager.getData('user-data').then(res=>{
+      if(res){
+        setUserData(JSON.parse(res))
+      }
+    })
+    handleReports().then(report=>{
+      setReports(report.reports||[])
+    })
+  },[])
+  
   const toggleSearch = () => {
     setIsSearchExpanded(!isSearchExpanded);
     
@@ -79,40 +108,37 @@ export default function NotebooksScreen() {
       useNativeDriver: false,
     }).start();
   };
+  const [downloadLoader,setDownloadLoader] = useState<number[]>([])
+  const handleDownload=async(filename:string,reportId:number)=>{
+      //TODO: Apply condition on report type
 
-  const renderNotebook = ({ item }: { item: Notebook }) => (
-    <ThemedView style={styles.notebookCard}>
-      <ThemedView style={styles.notebookContent}>
-        <ThemedView style={styles.leftColumn}>
-          <ThemedText type="defaultSemiBold" style={styles.notebookTitle}>
-            {item.title}
-          </ThemedText>
-          <ThemedText style={styles.createdDate}>
-            Created: {new Date(item.createdDate).toLocaleDateString()}
-          </ThemedText>
-        </ThemedView>
-        
-        <ThemedView style={styles.middleColumn}>
-          <ThemedText style={styles.notebookType}>{item.type}</ThemedText>
-        </ThemedView>
-        
-        <ThemedView style={styles.rightColumn}>
-          <View style={[
-            styles.statusBadge,
-            item.status === 'Viewed' ? styles.viewedBadge : styles.unreadBadge
-          ]}>
-            <ThemedText style={[
-              styles.statusText,
-              item.status === 'Viewed' ? styles.viewedText : styles.unreadText
-            ]}>
-              {item.status}
-            </ThemedText>
-          </View>
-        </ThemedView>
-      </ThemedView>
-    </ThemedView>
-  );
+      setDownloadLoader(prev=>[...prev,reportId])
+      const accessToken = await StorageService.getAccessToken()
+      const response = await fetch(`${API_BASE_URL}/api/assets/download_report/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+           Authorization: `Bearer ${accessToken}`,
+				},
+				body: JSON.stringify({
+					report_id: reportId,
+					file_type: 'docx',
+					hide_from_recent: false,
+				}),
+			});
+			const blob = await response.blob();
+			const href = URL.createObjectURL(blob);
+			const link = document.createElement('a');
 
+			link.href = href;
+			link.setAttribute('download', filename);
+			document.body.appendChild(link);
+			link.click();
+
+			document.body.removeChild(link);
+			URL.revokeObjectURL(href);
+      setDownloadLoader(prev=>prev.filter(rt=>rt!==reportId))
+  }
   return (
     <ThemedView style={styles.container}>
       {/* Header */}
@@ -120,10 +146,15 @@ export default function NotebooksScreen() {
         <ThemedView style={styles.topBar}>
           <ThemedView style={styles.leftHeader}>
             <IconSymbol size={24} name="line.horizontal.3" color="#333" />
-            <ThemedText type="title" style={styles.headerTitle}>Notebooks</ThemedText>
+            <ThemedText type="title" style={styles.headerTitle}>
+              Notebooks
+            </ThemedText>
           </ThemedView>
           <ThemedView style={styles.rightHeader}>
-            <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
+            <TouchableOpacity
+              onPress={toggleSearch}
+              style={styles.searchButton}
+            >
               <IconSymbol size={24} name="magnifyingglass" color="#333" />
             </TouchableOpacity>
             <View style={styles.notificationContainer}>
@@ -132,18 +163,20 @@ export default function NotebooksScreen() {
             </View>
           </ThemedView>
         </ThemedView>
-        
+
         {/* Expandable Search Bar */}
-        <Animated.View style={[
-          styles.expandableSearchContainer,
-          {
-            height: searchAnimation.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 60],
-            }),
-            opacity: searchAnimation,
-          }
-        ]}>
+        <Animated.View
+          style={[
+            styles.expandableSearchContainer,
+            {
+              height: searchAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 60],
+              }),
+              opacity: searchAnimation,
+            },
+          ]}
+        >
           <ThemedView style={styles.searchInputContainer}>
             <TextInput
               ref={searchInputRef}
@@ -161,16 +194,19 @@ export default function NotebooksScreen() {
       </ThemedView>
 
       {/* Scrollable Content */}
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Welcome Banner */}
         <LinearGradient
-          colors={['#E3F2FD', '#F3E5F5']}
+          colors={["#E3F2FD", "#F3E5F5"]}
           style={styles.welcomeBanner}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
           <ThemedText type="title" style={styles.welcomeTitle}>
-            Welcome, User!
+            Welcome, {userData.first_name}!
           </ThemedText>
           <ThemedText style={styles.welcomeSubtext}>
             How about starting with a new workflow?
@@ -179,35 +215,59 @@ export default function NotebooksScreen() {
 
         {/* Section Title */}
         <ThemedView style={styles.contentSection}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>Notebooks</ThemedText>
-          
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Notebooks
+          </ThemedText>
+
           {/* Notebook List */}
           <ThemedView style={styles.notebookContainer}>
-            {filteredNotebooks.map((item) => (
+            {reports?.map((item) => (
               <ThemedView key={item.id} style={styles.notebookCard}>
                 <ThemedView style={styles.notebookContent}>
                   <ThemedView style={styles.leftColumn}>
-                    <ThemedText type="defaultSemiBold" style={styles.notebookTitle}>
-                      {item.title}
-                    </ThemedText>
+                    <TouchableOpacity
+                      onPress={() => {
+                        handleDownload(item.title, Number(item.id));
+                      }}
+                    >
+                      <ThemedText
+                        type="defaultSemiBold"
+                        style={styles.notebookTitle}
+                      >
+                        {item.title}
+                      </ThemedText>
+                      {downloadLoader.includes(Number(item.id)) && (
+                        <ActivityIndicator color="#ffffff" />
+                      )}
+                    </TouchableOpacity>
                     <ThemedText style={styles.createdDate}>
-                      Created: {new Date(item.createdDate).toLocaleDateString()}
+                      Created: {new Date(item.created_on).toLocaleDateString()}
                     </ThemedText>
                   </ThemedView>
-                  
+
                   <ThemedView style={styles.middleColumn}>
-                    <ThemedText style={styles.notebookType}>{item.type}</ThemedText>
+                    <ThemedText style={styles.notebookType}>
+                      {item.type}
+                    </ThemedText>
                   </ThemedView>
-                  
+
                   <ThemedView style={styles.rightColumn}>
-                    <View style={[
-                      styles.statusBadge,
-                      item.status === 'Viewed' ? styles.viewedBadge : styles.unreadBadge
-                    ]}>
-                      <ThemedText style={[
-                        styles.statusText,
-                        item.status === 'Viewed' ? styles.viewedText : styles.unreadText
-                      ]}>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        item.status === "Viewed"
+                          ? styles.viewedBadge
+                          : styles.unreadBadge,
+                      ]}
+                    >
+                      <ThemedText
+                        style={[
+                          styles.statusText,
+                          item.status === "Viewed"
+                            ? styles.viewedText
+                            : styles.unreadText,
+                        ]}
+                      >
                         {item.status}
                       </ThemedText>
                     </View>

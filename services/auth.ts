@@ -13,7 +13,7 @@ interface TokenResponse {
   refresh_token: string;
 }
 
-const API_BASE_URL = 'https://apitest.wokelo.ai';
+export const API_BASE_URL = 'https://apitest.wokelo.ai';
 
 export class AuthService {
   static async login(credentials: LoginCredentials): Promise<TokenResponse> {
