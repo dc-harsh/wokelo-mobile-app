@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
@@ -7,7 +7,7 @@ import 'react-native-reanimated';
 import { SplashScreen } from '@/components/SplashScreen';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { StorageService } from '@/services/storage';
-import { useRouter } from 'expo-router';
+
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
