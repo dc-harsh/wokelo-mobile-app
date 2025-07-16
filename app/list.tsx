@@ -17,7 +17,7 @@ export default function ListScreen() {
       <ThemedView>
         <TextInput
           value=''
-          style
+          style={{}}
         />
       </ThemedView>
     </ThemedView>
