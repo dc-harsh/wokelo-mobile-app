@@ -1,13 +1,22 @@
-import { StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { StorageService } from '@/services/storage';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { DataManager, StorageService } from '@/services/storage';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
-
+  const [userData , setUserData] = useState<any>({});
+  useEffect(()=>{
+      DataManager.getData('user-data').then(res=>{
+        if(res){
+          setUserData(JSON.parse(res))
+        }
+      })
+    },[])
+    
   const handleLogout = async () => {
     Alert.alert(
       'Logout',
@@ -36,6 +45,32 @@ export default function ProfileScreen() {
         <ThemedView style={styles.profileSection}>
           <IconSymbol size={80} name="person.circle.fill" color="#0a7ea4" />
           <ThemedText type="subtitle" style={styles.userName}>User Profile</ThemedText>
+          <Image
+              source={{
+                uri: `https://wklogo.blob.core.windows.net/logos-small/_${userData?.email?.[0]?.toLowerCase()}.png`,
+              }}
+              style={{ width: 60, height: 60, borderRadius: 100, marginTop:45 }}
+            />
+          <ThemedText type="subtitle" style={styles.headingText}>Email</ThemedText>
+          <ThemedText type="subtitle" style={styles.bodyText}>{userData.email}</ThemedText>
+
+          <ThemedView style={{display:'flex',flexDirection:'row'}}>
+
+          <ThemedView style={{'marginRight':24}}>  
+          <ThemedText type="subtitle" style={styles.headingText}>First name</ThemedText>
+          <ThemedText type="subtitle" style={styles.bodyText}>{userData.first_name}</ThemedText>
+          </ThemedView>
+
+          <ThemedView>
+          <ThemedText type="subtitle" style={styles.headingText}>Last name</ThemedText>
+          <ThemedText type="subtitle" style={styles.bodyText}>{userData.last_name}</ThemedText>
+          </ThemedView>
+
+          </ThemedView>
+
+          <ThemedText type="subtitle" style={styles.headingText}>Company name</ThemedText>
+          <ThemedText type="subtitle" style={styles.bodyText}>{userData.org_name}</ThemedText>
+          
         </ThemedView>
         
         <ThemedView style={styles.buttonContainer}>
@@ -62,7 +97,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   profileSection: {
-    alignItems: 'center',
     marginVertical: 40,
   },
   userName: {
@@ -83,4 +117,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  headingText:{
+    color:'#ffffff',
+    fontSize:18,
+    fontWeight:500,
+    marginTop:24
+  },
+  bodyText:{
+    color:'#ffffff',
+    fontSize:16,
+    fontWeight:500,
+    marginTop:8
+  }
 });
