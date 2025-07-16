@@ -1,8 +1,9 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Animated, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Notebook {
   id: string;
@@ -46,10 +47,38 @@ const mockNotebooks: Notebook[] = [
 export default function NotebooksScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [notebooks] = useState<Notebook[]>(mockNotebooks);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const searchInputRef = useRef<TextInput>(null);
+  const searchAnimation = useRef(new Animated.Value(0)).current;
 
   const filteredNotebooks = notebooks.filter(notebook =>
     notebook.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const toggleSearch = () => {
+    setIsSearchExpanded(!isSearchExpanded);
+    
+    Animated.timing(searchAnimation, {
+      toValue: isSearchExpanded ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => {
+      if (!isSearchExpanded) {
+        searchInputRef.current?.focus();
+      }
+    });
+  };
+
+  const closeSearch = () => {
+    setIsSearchExpanded(false);
+    setSearchQuery('');
+    
+    Animated.timing(searchAnimation, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
 
   const renderNotebook = ({ item }: { item: Notebook }) => (
     <ThemedView style={styles.notebookCard}>
@@ -87,16 +116,48 @@ export default function NotebooksScreen() {
   return (
     <ThemedView style={styles.container}>
       {/* Header */}
-
-      {/* Sticky Search Bar */}
-      <ThemedView style={styles.stickySearchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search notebooks by name"
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      <ThemedView style={styles.header}>
+        <ThemedView style={styles.topBar}>
+          <ThemedView style={styles.leftHeader}>
+            <IconSymbol size={24} name="line.horizontal.3" color="#333" />
+            <ThemedText type="title" style={styles.headerTitle}>Notebooks</ThemedText>
+          </ThemedView>
+          <ThemedView style={styles.rightHeader}>
+            <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
+              <IconSymbol size={24} name="magnifyingglass" color="#333" />
+            </TouchableOpacity>
+            <View style={styles.notificationContainer}>
+              <IconSymbol size={24} name="bell.fill" color="#333" />
+              <View style={styles.notificationDot} />
+            </View>
+          </ThemedView>
+        </ThemedView>
+        
+        {/* Expandable Search Bar */}
+        <Animated.View style={[
+          styles.expandableSearchContainer,
+          {
+            height: searchAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 60],
+            }),
+            opacity: searchAnimation,
+          }
+        ]}>
+          <ThemedView style={styles.searchInputContainer}>
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Search notebooks by name"
+              placeholderTextColor="#999"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <TouchableOpacity onPress={closeSearch} style={styles.closeButton}>
+              <IconSymbol size={20} name="xmark" color="#666" />
+            </TouchableOpacity>
+          </ThemedView>
+        </Animated.View>
       </ThemedView>
 
       {/* Scrollable Content */}
@@ -185,6 +246,7 @@ const styles = StyleSheet.create({
   rightHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   headerTitle: {
     fontSize: 24,
@@ -201,6 +263,26 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#ff4444',
+  },
+  searchButton: {
+    padding: 4,
+  },
+  expandableSearchContainer: {
+    overflow: 'hidden',
+    marginTop: 12,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    paddingHorizontal: 12,
+  },
+  closeButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   stickySearchContainer: {
     position: 'relative',
@@ -220,13 +302,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   searchInput: {
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 16,
+    flex: 1,
     paddingVertical: 12,
-    borderRadius: 8,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     flex: 1,
