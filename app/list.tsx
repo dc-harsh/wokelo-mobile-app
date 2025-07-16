@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { API_BASE_URL } from "@/services/auth";
 import { StorageService } from "@/services/storage";
-import { useGlobalSearchParams } from "expo-router";
+import { router, useGlobalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -55,6 +55,7 @@ export default function ListScreen() {
       }),
     });
     setIsLoading(false);
+    router.replace('/')
     return reports.json();
   };
 
@@ -226,6 +227,7 @@ export default function ListScreen() {
 }),
     });
     setIsLoading(false);
+    router.replace('/')
     return reports.json();
   };
   return (
