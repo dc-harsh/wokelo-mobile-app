@@ -6,7 +6,6 @@ import { DataManager, StorageService } from '@/services/storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-
 interface Notebook {
   id: string;
   title: string;
