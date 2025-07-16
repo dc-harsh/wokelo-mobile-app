@@ -33,29 +33,30 @@ export default function ListScreen() {
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        researchTopic: topic,
-        description: "",
-        advanced_settings: {
-          max_years: "5",
-          countries: ["Worldwide"],
-          sources: ["wokelo", "www"],
-          custom_links: [],
-          keywords: [],
-          companies: [],
-          company_categories: [],
-          selected_attributes: [
-            75, 77, 72, 70, 71, 124, 375, 64, 67, 139, 69, 65, 66, 374, 76, 156,
-            125, 276, 68, 73, 74, 126, 127, 128, 138, 376,
-          ],
-          questions: [],
+        reportSource: "WKLAPP",
+        reportType: "industry_primer",
+        payload: {
+          researchTopic: topic,
+          description: "",
+          advanced_settings: {
+            max_years: "5",
+            countries: ["Worldwide"],
+            sources: ["wokelo", "www"],
+            custom_links: [],
+            keywords: [],
+            companies: [],
+            company_categories: [],
+            selected_attributes: [],
+            questions: [],
+            component: "industry_qna",
+          },
+          custom_files: [],
           component: "industry_qna",
         },
-        custom_files: [],
-        component: "industry_qna",
       }),
     });
     setIsLoading(false);
-    router.replace('/')
+    router.replace("/");
     return reports.json();
   };
 
@@ -65,7 +66,7 @@ export default function ListScreen() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [permalink, setPermalink] = useState("");
   const [companyDetailsLoading, setCompanyDetailsLoading] = useState(false);
-  
+
   const handelCompanySearch = async () => {
     setSearchResults([]);
     setSearchLoading(true);
@@ -128,8 +129,7 @@ export default function ListScreen() {
     handleGetCompDetails();
   }, [permalink]);
 
-
-   const handleCPReportGen = async () => {
+  const handleCPReportGen = async () => {
     setIsLoading(true);
     const accessToken = await StorageService.getAccessToken();
     const reports = await fetch(`${API_BASE_URL}/api/assets/process_common/`, {
@@ -139,95 +139,26 @@ export default function ListScreen() {
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-    "reportType": "company_primer",
-    "payload": {
-        "company_name": companyDetails.org_name,
-        "permalink": companyDetails.permalink,
-        "workbook_name": companyDetails.org_name,
-        "industry_research_topic": companyDetails.product_category,
-        "advanced_settings": {
-            "companies": [],
-            "selected_attributes": [
-                78,
-                79,
-                81,
-                130,
-                341,
-                342,
-                82,
-                332,
-                333,
-                334,
-                335,
-                337,
-                336,
-                338,
-                339,
-                340,
-                84,
-                85,
-                86,
-                87,
-                88,
-                89,
-                90,
-                91,
-                368,
-                367,
-                343,
-                103,
-                104,
-                112,
-                110,
-                115,
-                93,
-                370,
-                317,
-                120,
-                121,
-                237,
-                94,
-                373,
-                111,
-                371,
-                95,
-                362,
-                372,
-                96,
-                97,
-                98,
-                99,
-                100,
-                101,
-                102,
-                108,
-                105,
-                106,
-                107,
-                113,
-                114,
-                122,
-                357,
-                358,
-                359,
-                361,
-                360,
-                329,
-                330,
-                331,
-                369
-            ]
+        reportType: "company_primer",
+        payload: {
+          company_name: companyDetails.org_name,
+          permalink: companyDetails.permalink,
+          workbook_name: companyDetails.org_name,
+          industry_research_topic: companyDetails.product_category,
+          advanced_settings: {
+            companies: [],
+            selected_attributes: [],
+          },
+          custom_files: [],
+          sources: [],
+          questions: [],
+          component: "company_qna",
         },
-        "custom_files": [],
-        "sources": [],
-        "questions": [],
-        "component": "company_qna"
-    },
-    "reportSource": "WKLAPP"
-}),
+        reportSource: "WKLAPP",
+      }),
     });
     setIsLoading(false);
-    router.replace('/')
+    router.replace("/");
     return reports.json();
   };
   return (
@@ -322,43 +253,51 @@ export default function ListScreen() {
                   }}
                 >
                   <ThemedView
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: "#FFF",
-                  }}
-                  >
-                  <Image
-                    source={{
-                      uri: `https://wklogo.blob.core.windows.net/logos-small/${companyDetails.permalink}.png`,
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: "#FFF",
                     }}
-                    style={{ width: 50, height: 50, borderRadius: 12 }}
-                  />
+                  >
+                    <Image
+                      source={{
+                        uri: `https://wklogo.blob.core.windows.net/logos-small/${companyDetails.permalink}.png`,
+                      }}
+                      style={{ width: 50, height: 50, borderRadius: 12 }}
+                    />
+                    <ThemedText
+                      style={{
+                        color: "black",
+                        marginLeft: 12,
+                        fontSize: 14,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {companyDetails.org_name}
+                    </ThemedText>
+                  </ThemedView>
                   <ThemedText
                     style={{
-                      color: "black",
-                      marginLeft: 12,
-                      fontSize: 14,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {companyDetails.org_name}
-                  </ThemedText>
-                  </ThemedView>
-                  <ThemedText style={{
                       color: "black",
                       marginTop: 12,
                       fontSize: 12,
                       fontWeight: 500,
-                    }}>{companyDetails.short_description}</ThemedText>
-                     <ThemedText style={{
+                    }}
+                  >
+                    {companyDetails.short_description}
+                  </ThemedText>
+                  <ThemedText
+                    style={{
                       color: "black",
-                      textDecorationLine:'underline',
+                      textDecorationLine: "underline",
                       marginTop: 14,
                       fontSize: 12,
                       fontWeight: 500,
-                    }}>{companyDetails.website}</ThemedText>
+                    }}
+                  >
+                    {companyDetails.website}
+                  </ThemedText>
                 </ThemedView>
               </ThemedView>
             )}
@@ -377,7 +316,7 @@ export default function ListScreen() {
                 },
               ]}
               onPress={() => {
-                handleCPReportGen()
+                handleCPReportGen();
               }}
               disabled={isLoading}
             >
