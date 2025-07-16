@@ -142,8 +142,8 @@ export default function ListScreen() {
     "reportType": "company_primer",
     "payload": {
         "company_name": companyDetails.org_name,
-        "permalink": companyDetails.org_name,
-        "workbook_name": companyDetails.permalink,
+        "permalink": companyDetails.permalink,
+        "workbook_name": companyDetails.org_name,
         "industry_research_topic": companyDetails.product_category,
         "advanced_settings": {
             "companies": [],
