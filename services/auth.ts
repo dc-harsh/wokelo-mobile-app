@@ -17,19 +17,14 @@ const API_BASE_URL = 'https://apitest.wokelo.ai';
 
 export class AuthService {
   static async login(credentials: LoginCredentials): Promise<TokenResponse> {
-    const grantType = Constants.expoConfig?.extra?.grantType || process.env.GRANT_TYPE || 'password';
-    const clientId = Constants.expoConfig?.extra?.clientId || process.env.CLIENT_ID;
-    const clientSecret = Constants.expoConfig?.extra?.clientSecret || process.env.CLIENT_SECRET;
+
+    const grantType = process.env.EXPO_PUBLIC_GRANT_TYPE || 'password';
+    const clientId = process.env.EXPO_PUBLIC_CLIENT_ID;
+    const clientSecret = process.env.EXPO_PUBLIC_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
       throw new Error('OAuth credentials not configured. Please set CLIENT_ID and CLIENT_SECRET environment variables.');
     }
-
-    console.log('Logging in with credentials:', {
-      email: credentials.email,
-      grantType,
-      clientId,
-    });
 
     let payload = new FormData();
     payload.append('username', credentials.email);
@@ -46,7 +41,7 @@ export class AuthService {
         redirect: "follow"
       };
 
-      const response = await fetch("https://apitest.wokelo.ai/api/token/", requestOptions);
+      const response = await fetch("https://apitest.wokelo.ai/api/token/", requestOptions as any);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

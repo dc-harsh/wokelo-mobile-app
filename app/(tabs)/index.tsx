@@ -1,105 +1,319 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { StorageService } from '@/services/storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-export default function HomeScreen() {
-  const router = useRouter();
+interface Notebook {
+  id: string;
+  title: string;
+  createdDate: string;
+  type: string;
+  status: 'Viewed' | 'Unread';
+}
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await StorageService.clearTokenData();
-            router.replace('/login');
-          },
-        },
-      ]
-    );
-  };
+const mockNotebooks: Notebook[] = [
+  {
+    id: '1',
+    title: 'Oracle',
+    createdDate: '2024-01-15',
+    type: 'Company Research',
+    status: 'Viewed',
+  },
+  {
+    id: '2',
+    title: 'Healthcare',
+    createdDate: '2024-01-12',
+    type: 'Industry Research',
+    status: 'Unread',
+  },
+  {
+    id: '3',
+    title: 'Microsoft',
+    createdDate: '2024-01-10',
+    type: 'Company Research',
+    status: 'Viewed',
+  },
+  {
+    id: '4',
+    title: 'Technology Trends',
+    createdDate: '2024-01-08',
+    type: 'Industry Research',
+    status: 'Unread',
+  },
+];
 
-  const navigateToList = () => {
-    router.push('/list');
-  };
+export default function NotebooksScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [notebooks] = useState<Notebook[]>(mockNotebooks);
+
+  const filteredNotebooks = notebooks.filter(notebook =>
+    notebook.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const renderNotebook = ({ item }: { item: Notebook }) => (
+    <ThemedView style={styles.notebookCard}>
+      <ThemedView style={styles.notebookContent}>
+        <ThemedView style={styles.leftColumn}>
+          <ThemedText type="defaultSemiBold" style={styles.notebookTitle}>
+            {item.title}
+          </ThemedText>
+          <ThemedText style={styles.createdDate}>
+            Created: {new Date(item.createdDate).toLocaleDateString()}
+          </ThemedText>
+        </ThemedView>
+        
+        <ThemedView style={styles.middleColumn}>
+          <ThemedText style={styles.notebookType}>{item.type}</ThemedText>
+        </ThemedView>
+        
+        <ThemedView style={styles.rightColumn}>
+          <View style={[
+            styles.statusBadge,
+            item.status === 'Viewed' ? styles.viewedBadge : styles.unreadBadge
+          ]}>
+            <ThemedText style={[
+              styles.statusText,
+              item.status === 'Viewed' ? styles.viewedText : styles.unreadText
+            ]}>
+              {item.status}
+            </ThemedText>
+          </View>
+        </ThemedView>
+      </ThemedView>
+    </ThemedView>
+  );
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <ThemedView style={styles.container}>
+      {/* Header */}
+
+      {/* Sticky Search Bar */}
+      <ThemedView style={styles.stickySearchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search notebooks by name"
+          placeholderTextColor="#999"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome to Wokelo!</ThemedText>
-        <HelloWave />
       </ThemedView>
-      
-      <ThemedView style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={navigateToList}>
-          <ThemedText style={styles.buttonText}>View List</ThemedText>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={handleLogout}>
-          <ThemedText style={styles.buttonText}>Logout</ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">You're now logged in!</ThemedText>
-        <ThemedText>
-          Welcome to the Wokelo app. Use the buttons above to navigate or explore the tabs below.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+      {/* Scrollable Content */}
+      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Welcome Banner */}
+        <LinearGradient
+          colors={['#E3F2FD', '#F3E5F5']}
+          style={styles.welcomeBanner}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <ThemedText type="title" style={styles.welcomeTitle}>
+            Welcome, User!
+          </ThemedText>
+          <ThemedText style={styles.welcomeSubtext}>
+            How about starting with a new workflow?
+          </ThemedText>
+        </LinearGradient>
+
+        {/* Section Title */}
+        <ThemedView style={styles.contentSection}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>Notebooks</ThemedText>
+          
+          {/* Notebook List */}
+          <ThemedView style={styles.notebookContainer}>
+            {filteredNotebooks.map((item) => (
+              <ThemedView key={item.id} style={styles.notebookCard}>
+                <ThemedView style={styles.notebookContent}>
+                  <ThemedView style={styles.leftColumn}>
+                    <ThemedText type="defaultSemiBold" style={styles.notebookTitle}>
+                      {item.title}
+                    </ThemedText>
+                    <ThemedText style={styles.createdDate}>
+                      Created: {new Date(item.createdDate).toLocaleDateString()}
+                    </ThemedText>
+                  </ThemedView>
+                  
+                  <ThemedView style={styles.middleColumn}>
+                    <ThemedText style={styles.notebookType}>{item.type}</ThemedText>
+                  </ThemedView>
+                  
+                  <ThemedView style={styles.rightColumn}>
+                    <View style={[
+                      styles.statusBadge,
+                      item.status === 'Viewed' ? styles.viewedBadge : styles.unreadBadge
+                    ]}>
+                      <ThemedText style={[
+                        styles.statusText,
+                        item.status === 'Viewed' ? styles.viewedText : styles.unreadText
+                      ]}>
+                        {item.status}
+                      </ThemedText>
+                    </View>
+                  </ThemedView>
+                </ThemedView>
+              </ThemedView>
+            ))}
+          </ThemedView>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    paddingTop: 50,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  leftHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  buttonContainer: {
     gap: 12,
-    marginBottom: 20,
   },
-  button: {
-    backgroundColor: '#0a7ea4',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+  rightHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  logoutButton: {
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  notificationContainer: {
+    position: 'relative',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#ff4444',
   },
-  buttonText: {
-    color: '#ffffff',
+  stickySearchContainer: {
+    position: 'relative',
+    zIndex: 10,
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  searchInput: {
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  scrollContent: {
+    flex: 1,
+  },
+  welcomeBanner: {
+    marginHorizontal: 20,
+    marginVertical: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderRadius: 16,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  welcomeSubtext: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 20,
+  },
+  contentSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  notebookContainer: {
+    gap: 16,
+  },
+  notebookCard: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    paddingBottom: 16,
+  },
+  notebookContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  leftColumn: {
+    flex: 2,
+  },
+  middleColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  rightColumn: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  notebookTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  createdDate: {
+    fontSize: 12,
+    color: '#666',
+  },
+  notebookType: {
+    fontSize: 12,
+    color: '#666',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  viewedBadge: {
+    backgroundColor: '#e8f5e8',
+  },
+  unreadBadge: {
+    backgroundColor: '#ffe8e8',
+  },
+  statusText: {
+    fontSize: 12,
     fontWeight: '600',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  viewedText: {
+    color: '#2d7d32',
+  },
+  unreadText: {
+    color: '#d32f2f',
   },
 });

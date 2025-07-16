@@ -45,11 +45,7 @@ export default function RootLayout() {
       />
     );
   }
-
-  // if (isCheckingAuth) {
-  //   return null;
-  // }
-
+  
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>

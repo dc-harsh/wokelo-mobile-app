@@ -15,11 +15,13 @@ export default function LoginScreen() {
     try {
       console.log('Attempting login with:', { email, password });
       const tokenData = await AuthService.login({ email, password });
+      console.log('Login successful, token data:', tokenData);
       await StorageService.storeTokenData(tokenData);
       
       // Navigate to the main app
       router.replace('/(tabs)');
     } catch (error) {
+      console.error('Login error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       Alert.alert('Login Error', errorMessage);
     } finally {
